@@ -1,18 +1,14 @@
-import React, { useMemo, useState, useEffect } from "react";
+// CDN + Babel 版本：不要 import / export；React/ReactDOM 取自全域
+const { useMemo, useState, useEffect } = React;
 
-// 單檔 React 應用：網路自診模擬（20種<1%版 v1.4.1）
-// 本次在 v1.4 基礎上：
-// 1) 將整數百分比由 50.0% → 50%
-// 2) 結果頁按鈕由「回到症狀選擇」→「重新診斷」
-// 3) 每次診斷後，所有「詳細機率」預設為關閉（重置 open 狀態）
-
-export default function App() {
+// 單檔 React 應用：網路自診模擬（20種<1%版 v1.4.1 修正：CDN/3秒延遲/Tailwind）
+function App() {
   const [selected, setSelected] = useState([]);
   const [phase, setPhase] = useState("select");
   const [showProb, setShowProb] = useState(false);
   const [results, setResults] = useState([]);
   const [open, setOpen] = useState({});
-  const delayMs = 2000; // 固定 2 秒
+  const delayMs = 3000; // 固定 3 秒（依你的需求）
   const [revealCount, setRevealCount] = useState(0);
 
   const symptoms = useMemo(
@@ -30,32 +26,35 @@ export default function App() {
     []
   );
 
-  const symptomDict = useMemo(() => Object.fromEntries(symptoms.map(s => [s.id, s.name])), [symptoms]);
+  const symptomDict = useMemo(
+    () => Object.fromEntries(symptoms.map(s => [s.id, s.name])),
+    [symptoms]
+  );
 
-  // 20 種（成人盛行率 < 1%）— 與 v1.4 相同資料
+  // 20 種（成人盛行率 < 1%）
   const conditions = useMemo(
     () => [
-      { id: 'celiac', name: '乳糜瀉（Celiac disease）', match: ['gi','fatigue','weight','sleep'], prevalenceP: 0.007, cureRateP: 0.7, severeAnnualRiskP: 0, notes: { prevalence: '全球活體切片確診盛行約 0.7%。', control: '嚴格無麩質飲食後多數症狀緩解；黏膜癒合率約 60–90%。', severe: '無一致年化死亡/重症率可直用，多以長期併發風險敘述。' } },
-      { id: 'ms', name: '多發性硬化（Multiple sclerosis）', match: ['headache','fatigue','sleep'], prevalenceP: 0.0025, cureRateP: 0.3, severeAnnualRiskP: 0, notes: { prevalence: '成人盛行約 0.16–0.38%；此處約 0.25%。', control: '疾病修飾治療可降低復發與延緩進展；「無疾病活動」比例依藥物而異。', severe: '文獻多報相對死亡風險或存活曲線，缺乏單一穩定年化值。' } },
-      { id: 'ra', name: '類風濕性關節炎（RA）', match: ['neck','fatigue','sleep'], prevalenceP: 0.0046, cureRateP: 0.3, severeAnnualRiskP: 0, notes: { prevalence: '全球盛行約 0.46%。', control: '臨床緩解比例依策略約 10–40%。', severe: '死亡風險較一般人高，但不建議用單一年度值呈現。' } },
-      { id: 'sle', name: '系統性紅斑狼瘡（SLE）', match: ['chest','breath','fatigue','sleep'], prevalenceP: 0.00061, cureRateP: 0.5, severeAnnualRiskP: 0, notes: { prevalence: '成人盛行約 0.061%。', control: '5 年存活率 >90–95%；可達低病活/緩解。', severe: '不同亞群差異大，以存活率描述較合適。' } },
-      { id: 'mg', name: '重症肌無力（MG）', match: ['fatigue','breath','throat'], prevalenceP: 0.00025, cureRateP: 0.6, severeAnnualRiskP: 0.005, notes: { prevalence: '盛行約 25/10萬。', control: '多數可藥物控制至最小症狀或藥物緩解。', severe: '危象及呼吸衰竭風險存在；近年院內死亡已明顯降低。' } },
-      { id: 'cd', name: '克隆氏症（Crohn’s disease）', match: ['gi','fatigue','weight'], prevalenceP: 0.002, cureRateP: 0.35, severeAnnualRiskP: 0.005, notes: { prevalence: '成人盛行多在 0.15–0.3%；取 0.2%。', control: '生物製劑/小分子維持期緩解約 20–45%。', severe: '重症併發需手術與住院；整體年死亡低（以 0.5% 顯示量級）。' } },
-      { id: 'uc', name: '潰瘍性結腸炎（UC）', match: ['gi','fatigue','weight'], prevalenceP: 0.003, cureRateP: 0.35, severeAnnualRiskP: 0.003, notes: { prevalence: '成人盛行約 0.2–0.5%；取 0.3%。', control: '維持期臨床緩解 27–42%。', severe: '嚴重發作需住院；長期整體年死亡低（~0.3% 顯示量級）。' } },
-      { id: 'meniere', name: '美尼爾氏症（Ménière’s）', match: ['headache','fatigue','sleep'], prevalenceP: 0.0019, cureRateP: 0.4, severeAnnualRiskP: 0, notes: { prevalence: '理賠/行政資料推估約 190/10萬。', control: '藥物+生活調整可減少發作；病程具變異。', severe: '生命威脅低；以功能受損為主，難以給年化死亡。' } },
-      { id: 'pots', name: '姿勢性心搏過速症候群（POTS）', match: ['headache','chest','breath','fatigue','sleep'], prevalenceP: 0.006, cureRateP: 0.5, severeAnnualRiskP: 0, notes: { prevalence: '估計 0.2–1%；此處取 0.6%。', control: '非藥物+藥物可改善功能。', severe: '直接致命風險極低；缺乏可靠年化死亡。' } },
-      { id: 'sarcoid', name: '薩可伊德症（Sarcoidosis）', match: ['breath','chest','fatigue'], prevalenceP: 0.0014, cureRateP: 0.6, severeAnnualRiskP: 0.004, notes: { prevalence: '多國盛行 40–230/10萬；取 140/10萬。', control: '不少病例可自行緩解或以免疫治療控制。', severe: '美國期刊顯示全國年死亡率上升，但病人層級年死亡約為個位數‰。' } },
-      { id: 'axspa', name: '僵直性脊椎炎譜系（SpA/AS）', match: ['neck','fatigue','sleep'], prevalenceP: 0.004, cureRateP: 0.4, severeAnnualRiskP: 0.002, notes: { prevalence: '盛行約 0.2–0.6%；取 0.4%。', control: '生物製劑改善疼痛與功能。', severe: '整體死亡風險略高於一般人，但年化為低百分比。' } },
-      { id: 'ipf', name: '特發性肺纖維化（IPF）', match: ['breath','fatigue','sleep'], prevalenceP: 0.00018, cureRateP: 0.1, severeAnnualRiskP: 0.1, notes: { prevalence: '盛行約 15–52/10萬；此處 18/10萬。', control: '抗纖維化藥可延緩惡化。', severe: '進展性呼吸衰竭；年死亡可達雙位數百分比等級。' } },
-      { id: 'ssc', name: '系統性硬化症（SSc）', match: ['neck','breath','fatigue'], prevalenceP: 0.00018, cureRateP: 0.2, severeAnnualRiskP: 0.03, notes: { prevalence: '盛行約 17–26/10萬；此處 18/10萬。', control: '器官導向治療可延緩進展。', severe: '死亡率高於一般人；文獻常報 3–4%/年等級（依亞型差）。' } },
-      { id: 'phpt', name: '原發性副甲狀腺機能亢進（PHPT）', match: ['fatigue','neck','gi'], prevalenceP: 0.004, cureRateP: 0.95, severeAnnualRiskP: 0.001, notes: { prevalence: '一般成人約 1–7/1000；此處 4/1000。', control: '手術多可治癒。', severe: '高鈣相關急症少見；此處以 0.1%/年顯示量級。' } },
-      { id: 'pbc', name: '原發性膽汁性膽管炎（PBC）', match: ['fatigue','gi'], prevalenceP: 0.00018, cureRateP: 0.6, severeAnnualRiskP: 0.02, notes: { prevalence: '全球盛行約 18/10萬。', control: 'UDCA/二線藥物可延緩進展。', severe: '進展至肝硬化/肝衰風險；以 2%/年顯示量級。' } },
-      { id: 'pe', name: '肺栓塞（PE，年發生）', match: ['breath','chest'], prevalenceP: 0.0008, cureRateP: 0.9, severeAnnualRiskP: 0.05, notes: { prevalence: '年發生率約 39–115/10萬（此處 80/10萬）。', control: '抗凝治療可顯著降低死亡與再發。', severe: '院內死亡率多報 4–13% 範圍，取 5% 作代表。' } },
-      { id: 'pericarditis', name: '急性心包膜炎（年發生）', match: ['chest','breath','throat'], prevalenceP: 0.000277, cureRateP: 0.85, severeAnnualRiskP: 0.01, notes: { prevalence: '西方年發生率約 27.7/10萬。', control: 'NSAIDs+秋水仙素大多有效；復發率 15–30%。', severe: '少數併心包填塞或縮窄；約 1%/年等級。' } },
-      { id: 'myocarditis', name: '急性心肌炎（年發生）', match: ['chest','breath','fatigue'], prevalenceP: 0.0002, cureRateP: 0.7, severeAnnualRiskP: 0.05, notes: { prevalence: '年發生 ~10–22/10萬。', control: '多數可恢復；少數轉擴張型心肌病。', severe: '事件期死亡或重症心衰 5% 等級（依族群差）。' } },
-      { id: 'addison', name: '愛迪生氏病（原發性腎上腺皮質機能低下）', match: ['fatigue','weight','gi','sleep'], prevalenceP: 0.00008, cureRateP: 0.9, severeAnnualRiskP: 0.01, notes: { prevalence: '盛行 4–15/10萬；此處 8/10萬。', control: '長期替代治療可維持生活品質。', severe: '腎上腺危象需教育與緊急處置；~1%/年量級。' } },
-      { id: 'pa', name: '惡性貧血（Pernicious anemia）', match: ['fatigue','headache','breath'], prevalenceP: 0.001, cureRateP: 0.9, severeAnnualRiskP: 0.001, notes: { prevalence: '成人約 0.1%，高齡更常見。', control: 'B12 補充可逆轉血球/神經症狀。', severe: '未治療有神經併發與心血管風險；0.1%/年量級。' } },
-      { id: 'vm', name: '前庭性偏頭痛（Vestibular migraine）', match: ['headache','fatigue','sleep'], prevalenceP: 0.009, cureRateP: 0.5, severeAnnualRiskP: 0.0001, notes: { prevalence: '流病估計接近 1%（此處 0.9%）。', control: '預防性藥物與生活調整可減少發作。', severe: '生命威脅極低；以 0.01%/年顯示量級。' } },
+      { id: 'celiac', name: '乳糜瀉（Celiac disease）', match: ['gi','fatigue','weight','sleep'], prevalenceP: 0.007, cureRateP: 0.7, severeAnnualRiskP: 0, notes: {} },
+      { id: 'ms', name: '多發性硬化（Multiple sclerosis）', match: ['headache','fatigue','sleep'], prevalenceP: 0.0025, cureRateP: 0.3, severeAnnualRiskP: 0, notes: {} },
+      { id: 'ra', name: '類風濕性關節炎（RA）', match: ['neck','fatigue','sleep'], prevalenceP: 0.0046, cureRateP: 0.3, severeAnnualRiskP: 0, notes: {} },
+      { id: 'sle', name: '系統性紅斑狼瘡（SLE）', match: ['chest','breath','fatigue','sleep'], prevalenceP: 0.00061, cureRateP: 0.5, severeAnnualRiskP: 0, notes: {} },
+      { id: 'mg', name: '重症肌無力（MG）', match: ['fatigue','breath','throat'], prevalenceP: 0.00025, cureRateP: 0.6, severeAnnualRiskP: 0.005, notes: {} },
+      { id: 'cd', name: '克隆氏症（Crohn’s disease）', match: ['gi','fatigue','weight'], prevalenceP: 0.002, cureRateP: 0.35, severeAnnualRiskP: 0.005, notes: {} },
+      { id: 'uc', name: '潰瘍性結腸炎（UC）', match: ['gi','fatigue','weight'], prevalenceP: 0.003, cureRateP: 0.35, severeAnnualRiskP: 0.003, notes: {} },
+      { id: 'meniere', name: '美尼爾氏症（Ménière’s）', match: ['headache','fatigue','sleep'], prevalenceP: 0.0019, cureRateP: 0.4, severeAnnualRiskP: 0, notes: {} },
+      { id: 'pots', name: '姿勢性心搏過速症候群（POTS）', match: ['headache','chest','breath','fatigue','sleep'], prevalenceP: 0.006, cureRateP: 0.5, severeAnnualRiskP: 0, notes: {} },
+      { id: 'sarcoid', name: '薩可伊德症（Sarcoidosis）', match: ['breath','chest','fatigue'], prevalenceP: 0.0014, cureRateP: 0.6, severeAnnualRiskP: 0.004, notes: {} },
+      { id: 'axspa', name: '僵直性脊椎炎譜系（SpA/AS）', match: ['neck','fatigue','sleep'], prevalenceP: 0.004, cureRateP: 0.4, severeAnnualRiskP: 0.002, notes: {} },
+      { id: 'ipf', name: '特發性肺纖維化（IPF）', match: ['breath','fatigue','sleep'], prevalenceP: 0.00018, cureRateP: 0.1, severeAnnualRiskP: 0.1, notes: {} },
+      { id: 'ssc', name: '系統性硬化症（SSc）', match: ['neck','breath','fatigue'], prevalenceP: 0.00018, cureRateP: 0.2, severeAnnualRiskP: 0.03, notes: {} },
+      { id: 'phpt', name: '原發性副甲狀腺機能亢進（PHPT）', match: ['fatigue','neck','gi'], prevalenceP: 0.004, cureRateP: 0.95, severeAnnualRiskP: 0.001, notes: {} },
+      { id: 'pbc', name: '原發性膽汁性膽管炎（PBC）', match: ['fatigue','gi'], prevalenceP: 0.00018, cureRateP: 0.6, severeAnnualRiskP: 0.02, notes: {} },
+      { id: 'pe', name: '肺栓塞（PE，年發生）', match: ['breath','chest'], prevalenceP: 0.0008, cureRateP: 0.9, severeAnnualRiskP: 0.05, notes: {} },
+      { id: 'pericarditis', name: '急性心包膜炎（年發生）', match: ['chest','breath','throat'], prevalenceP: 0.000277, cureRateP: 0.85, severeAnnualRiskP: 0.01, notes: {} },
+      { id: 'myocarditis', name: '急性心肌炎（年發生）', match: ['chest','breath','fatigue'], prevalenceP: 0.0002, cureRateP: 0.7, severeAnnualRiskP: 0.05, notes: {} },
+      { id: 'addison', name: '愛迪生氏病', match: ['fatigue','weight','gi','sleep'], prevalenceP: 0.00008, cureRateP: 0.9, severeAnnualRiskP: 0.01, notes: {} },
+      { id: 'pa', name: '惡性貧血（Pernicious anemia）', match: ['fatigue','headache','breath'], prevalenceP: 0.001, cureRateP: 0.9, severeAnnualRiskP: 0.001, notes: {} },
+      { id: 'vm', name: '前庭性偏頭痛（Vestibular migraine）', match: ['headache','fatigue','sleep'], prevalenceP: 0.009, cureRateP: 0.5, severeAnnualRiskP: 0.0001, notes: {} },
     ],
     []
   );
@@ -66,12 +65,11 @@ export default function App() {
       return;
     }
     setPhase('thinking');
-    setOpen({}); // 每次診斷重置展開狀態
-
+    setOpen({});
     const scored = conditions
-      .map((c) => {
-        const hits = c.match.filter((m) => selected.includes(m));
-        const ratio = c.match.length > 0 ? hits.length / c.match.length : 0;
+      .map(c => {
+        const hits = c.match.filter(m => selected.includes(m));
+        const ratio = c.match.length ? hits.length / c.match.length : 0;
         return { ...c, hits, ratio };
       })
       .sort((a, b) => b.ratio - a.ratio || (b.prevalenceP || 0) - (a.prevalenceP || 0))
@@ -80,12 +78,13 @@ export default function App() {
     setResults(scored);
     setRevealCount(0);
     setShowProb(false);
+
     window.setTimeout(() => {
       setShowProb(true);
       let i = 0;
       const t = setInterval(() => {
         i += 1;
-        setRevealCount((prev) => Math.min(scored.length, prev + 1));
+        setRevealCount(prev => Math.min(scored.length, prev + 1));
         if (i >= scored.length) clearInterval(t);
       }, 220);
     }, delayMs);
@@ -101,7 +100,7 @@ export default function App() {
   }
 
   function toggle(id) {
-    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setSelected(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
   }
 
   return (
@@ -115,7 +114,7 @@ export default function App() {
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <h2 className="text-lg font-semibold mb-3">請勾選最近出現過的症狀</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {symptoms.map((s) => (
+              {symptoms.map(s => (
                 <label
                   key={s.id}
                   className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer select-none transition ${
@@ -180,7 +179,7 @@ export default function App() {
                     <div className="mt-2">
                       <button
                         className="w-full text-left text-sm flex items-center justify-between p-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-100"
-                        onClick={() => setOpen((o) => ({ ...o, [r.id]: !o[r.id] }))}
+                        onClick={() => setOpen(o => ({ ...o, [r.id]: !o[r.id] }))}
                         aria-expanded={!!open[r.id]}
                       >
                         <span className="font-medium">詳細機率</span>
@@ -228,7 +227,6 @@ function ProbBox({ label, value }) {
   );
 }
 
-// 小機率以第一位有效數字；整數百分比移除小數 .0 → 顯示為 50%
 function toPretty(v) {
   if (v == null) return { pctStr: '—', oneInStr: '' };
   if (v === 0) return { pctStr: '≈0', oneInStr: '' };
@@ -252,8 +250,8 @@ function toPretty(v) {
 }
 
 function Progress({ ms }) {
-  const [elapsed, setElapsed] = useState(0);
-  useEffect(() => {
+  const [elapsed, setElapsed] = React.useState(0);
+  React.useEffect(() => {
     const start = Date.now();
     const t = setInterval(() => setElapsed(Math.min(Date.now() - start, ms)), 50);
     return () => clearInterval(t);
@@ -265,3 +263,7 @@ function Progress({ ms }) {
     </div>
   );
 }
+
+// React 18 掛載
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
