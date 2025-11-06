@@ -1,14 +1,14 @@
-// CDN + Babel 版本：不要 import / export；React/ReactDOM 取自全域
+// CDN + Babel 版：不要 import/export；React/ReactDOM 來自全域
 const { useMemo, useState, useEffect } = React;
 
-// 單檔 React 應用：網路自診模擬（20種<1%版 v1.4.1 修正：CDN/3秒延遲/Tailwind）
+// 單檔 React 應用：網路自診模擬（20種<1%版 v1.4.1-排序優化：ratio → 命中數 → 盛行率）
 function App() {
   const [selected, setSelected] = useState([]);
   const [phase, setPhase] = useState("select");
   const [showProb, setShowProb] = useState(false);
   const [results, setResults] = useState([]);
   const [open, setOpen] = useState({});
-  const delayMs = 3000; // 固定 3 秒（依你的需求）
+  const delayMs = 1500; // 固定 2 秒（依你這版設定）
   const [revealCount, setRevealCount] = useState(0);
 
   const symptoms = useMemo(
@@ -31,28 +31,28 @@ function App() {
     [symptoms]
   );
 
-  // 20 種（成人盛行率 < 1%）
+  // 20 種（成人盛行率 < 1%）— 與 v1.4 相同資料
   const conditions = useMemo(
     () => [
       { id: 'celiac', name: '乳糜瀉（Celiac disease）', match: ['gi','fatigue','weight','sleep'], prevalenceP: 0.007, cureRateP: 0.7, severeAnnualRiskP: 0, notes: {} },
-      { id: 'ms', name: '多發性硬化（Multiple sclerosis）', match: ['headache','fatigue','sleep'], prevalenceP: 0.0025, cureRateP: 0.3, severeAnnualRiskP: 0, notes: {} },
-      { id: 'ra', name: '類風濕性關節炎（RA）', match: ['neck','fatigue','sleep'], prevalenceP: 0.0046, cureRateP: 0.3, severeAnnualRiskP: 0, notes: {} },
-      { id: 'sle', name: '系統性紅斑狼瘡（SLE）', match: ['chest','breath','fatigue','sleep'], prevalenceP: 0.00061, cureRateP: 0.5, severeAnnualRiskP: 0, notes: {} },
-      { id: 'mg', name: '重症肌無力（MG）', match: ['fatigue','breath','throat'], prevalenceP: 0.00025, cureRateP: 0.6, severeAnnualRiskP: 0.005, notes: {} },
+      { id: 'ms', name: '多發性硬化症（Multiple sclerosis）', match: ['headache','fatigue','sleep'], prevalenceP: 0.0025, cureRateP: 0.3, severeAnnualRiskP: 0, notes: {} },
+      { id: 'ra', name: '類風濕性關節炎（Rheumatoid arthritis）', match: ['neck','fatigue','sleep'], prevalenceP: 0.0046, cureRateP: 0.3, severeAnnualRiskP: 0, notes: {} },
+      { id: 'sle', name: '紅斑性狼瘡（Systemic lupus erythematosus）', match: ['chest','breath','fatigue','sleep'], prevalenceP: 0.00061, cureRateP: 0.5, severeAnnualRiskP: 0, notes: {} },
+      { id: 'mg', name: '重症肌無力（Myasthenia gravis）', match: ['fatigue','breath','throat'], prevalenceP: 0.00025, cureRateP: 0.6, severeAnnualRiskP: 0.005, notes: {} },
       { id: 'cd', name: '克隆氏症（Crohn’s disease）', match: ['gi','fatigue','weight'], prevalenceP: 0.002, cureRateP: 0.35, severeAnnualRiskP: 0.005, notes: {} },
-      { id: 'uc', name: '潰瘍性結腸炎（UC）', match: ['gi','fatigue','weight'], prevalenceP: 0.003, cureRateP: 0.35, severeAnnualRiskP: 0.003, notes: {} },
-      { id: 'meniere', name: '美尼爾氏症（Ménière’s）', match: ['headache','fatigue','sleep'], prevalenceP: 0.0019, cureRateP: 0.4, severeAnnualRiskP: 0, notes: {} },
-      { id: 'pots', name: '姿勢性心搏過速症候群（POTS）', match: ['headache','chest','breath','fatigue','sleep'], prevalenceP: 0.006, cureRateP: 0.5, severeAnnualRiskP: 0, notes: {} },
-      { id: 'sarcoid', name: '薩可伊德症（Sarcoidosis）', match: ['breath','chest','fatigue'], prevalenceP: 0.0014, cureRateP: 0.6, severeAnnualRiskP: 0.004, notes: {} },
-      { id: 'axspa', name: '僵直性脊椎炎譜系（SpA/AS）', match: ['neck','fatigue','sleep'], prevalenceP: 0.004, cureRateP: 0.4, severeAnnualRiskP: 0.002, notes: {} },
-      { id: 'ipf', name: '特發性肺纖維化（IPF）', match: ['breath','fatigue','sleep'], prevalenceP: 0.00018, cureRateP: 0.1, severeAnnualRiskP: 0.1, notes: {} },
-      { id: 'ssc', name: '系統性硬化症（SSc）', match: ['neck','breath','fatigue'], prevalenceP: 0.00018, cureRateP: 0.2, severeAnnualRiskP: 0.03, notes: {} },
-      { id: 'phpt', name: '原發性副甲狀腺機能亢進（PHPT）', match: ['fatigue','neck','gi'], prevalenceP: 0.004, cureRateP: 0.95, severeAnnualRiskP: 0.001, notes: {} },
-      { id: 'pbc', name: '原發性膽汁性膽管炎（PBC）', match: ['fatigue','gi'], prevalenceP: 0.00018, cureRateP: 0.6, severeAnnualRiskP: 0.02, notes: {} },
-      { id: 'pe', name: '肺栓塞（PE，年發生）', match: ['breath','chest'], prevalenceP: 0.0008, cureRateP: 0.9, severeAnnualRiskP: 0.05, notes: {} },
-      { id: 'pericarditis', name: '急性心包膜炎（年發生）', match: ['chest','breath','throat'], prevalenceP: 0.000277, cureRateP: 0.85, severeAnnualRiskP: 0.01, notes: {} },
-      { id: 'myocarditis', name: '急性心肌炎（年發生）', match: ['chest','breath','fatigue'], prevalenceP: 0.0002, cureRateP: 0.7, severeAnnualRiskP: 0.05, notes: {} },
-      { id: 'addison', name: '愛迪生氏病', match: ['fatigue','weight','gi','sleep'], prevalenceP: 0.00008, cureRateP: 0.9, severeAnnualRiskP: 0.01, notes: {} },
+      { id: 'uc', name: '潰瘍性結腸炎（Ulcerative colitis）', match: ['gi','fatigue','weight'], prevalenceP: 0.003, cureRateP: 0.35, severeAnnualRiskP: 0.003, notes: {} },
+      { id: 'meniere', name: '梅尼爾氏症（Ménière’s disease）', match: ['headache','fatigue','sleep'], prevalenceP: 0.0019, cureRateP: 0.4, severeAnnualRiskP: 0, notes: {} },
+      { id: 'pots', name: '姿勢性心搏過速症候群（Postural orthostatic tachycardia syndrome）', match: ['headache','chest','breath','fatigue','sleep'], prevalenceP: 0.006, cureRateP: 0.5, severeAnnualRiskP: 0, notes: {} },
+      { id: 'sarcoid', name: '結節病（Sarcoidosis）', match: ['breath','chest','fatigue'], prevalenceP: 0.0014, cureRateP: 0.6, severeAnnualRiskP: 0.004, notes: {} },
+      { id: 'axspa', name: '僵直性脊椎炎（Ankylosing spondylitis）', match: ['neck','fatigue','sleep'], prevalenceP: 0.004, cureRateP: 0.4, severeAnnualRiskP: 0.002, notes: {} },
+      { id: 'ipf', name: '特發性肺纖維化（Idiopathic pulmonary fibrosis）', match: ['breath','fatigue','sleep'], prevalenceP: 0.00018, cureRateP: 0.1, severeAnnualRiskP: 0.1, notes: {} },
+      { id: 'ssc', name: '硬皮病（Systemic Sclerosis）', match: ['neck','breath','fatigue'], prevalenceP: 0.00018, cureRateP: 0.2, severeAnnualRiskP: 0.03, notes: {} },
+      { id: 'phpt', name: '原發性副甲狀腺機能亢進（Primary Hyperparathyroidism）', match: ['fatigue','neck','gi'], prevalenceP: 0.004, cureRateP: 0.95, severeAnnualRiskP: 0.001, notes: {} },
+      { id: 'pbc', name: '原發性膽汁性膽管炎（Primary biliary cholangitis）', match: ['fatigue','gi'], prevalenceP: 0.00018, cureRateP: 0.6, severeAnnualRiskP: 0.02, notes: {} },
+      { id: 'pe', name: '肺栓塞（Pulmonary embolism）', match: ['breath','chest'], prevalenceP: 0.0008, cureRateP: 0.9, severeAnnualRiskP: 0.05, notes: {} },
+      { id: 'pericarditis', name: '急性心包膜炎（Acute pericarditis）', match: ['chest','breath','throat'], prevalenceP: 0.000277, cureRateP: 0.85, severeAnnualRiskP: 0.01, notes: {} },
+      { id: 'myocarditis', name: '急性心肌炎（Acute myocarditis）', match: ['chest','breath','fatigue'], prevalenceP: 0.0002, cureRateP: 0.7, severeAnnualRiskP: 0.05, notes: {} },
+      { id: 'addison', name: '愛迪生氏病（Addison's disease）', match: ['fatigue','weight','gi','sleep'], prevalenceP: 0.00008, cureRateP: 0.9, severeAnnualRiskP: 0.01, notes: {} },
       { id: 'pa', name: '惡性貧血（Pernicious anemia）', match: ['fatigue','headache','breath'], prevalenceP: 0.001, cureRateP: 0.9, severeAnnualRiskP: 0.001, notes: {} },
       { id: 'vm', name: '前庭性偏頭痛（Vestibular migraine）', match: ['headache','fatigue','sleep'], prevalenceP: 0.009, cureRateP: 0.5, severeAnnualRiskP: 0.0001, notes: {} },
     ],
@@ -65,20 +65,24 @@ function App() {
       return;
     }
     setPhase('thinking');
-    setOpen({});
+    setOpen({}); // 每次診斷重置展開狀態
+
     const scored = conditions
       .map(c => {
         const hits = c.match.filter(m => selected.includes(m));
-        const ratio = c.match.length ? hits.length / c.match.length : 0;
+        const ratio = c.match.length > 0 ? hits.length / c.match.length : 0;
         return { ...c, hits, ratio };
       })
-      .sort((a, b) => b.ratio - a.ratio || (b.prevalenceP || 0) - (a.prevalenceP || 0))
+      .sort((a, b) =>
+        (b.ratio - a.ratio) ||
+        (b.hits.length - a.hits.length) ||
+        ((b.prevalenceP || 0) - (a.prevalenceP || 0))
+      )
       .slice(0, 5);
 
     setResults(scored);
     setRevealCount(0);
     setShowProb(false);
-
     window.setTimeout(() => {
       setShowProb(true);
       let i = 0;
@@ -227,6 +231,7 @@ function ProbBox({ label, value }) {
   );
 }
 
+// 小機率以第一位有效數字；整數百分比移除 .0 → 顯示為 50%
 function toPretty(v) {
   if (v == null) return { pctStr: '—', oneInStr: '' };
   if (v === 0) return { pctStr: '≈0', oneInStr: '' };
@@ -250,8 +255,8 @@ function toPretty(v) {
 }
 
 function Progress({ ms }) {
-  const [elapsed, setElapsed] = React.useState(0);
-  React.useEffect(() => {
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
     const start = Date.now();
     const t = setInterval(() => setElapsed(Math.min(Date.now() - start, ms)), 50);
     return () => clearInterval(t);
