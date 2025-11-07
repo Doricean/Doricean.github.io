@@ -1,12 +1,6 @@
 const { useMemo, useState, useEffect } = React;
 
-// 網路自診模擬 — 20種<1% 版 v1.7（部署版 index.jsx）
-// 相對 v1.6：
-// 1) 結果標題改為「你很可能確診了」
-// 2) 「詳細說明」→「病程概述」
-// 3) 「顯示機率」→「真實機率」，展開後機率卡上方加一句安撫語
-// 4) 長說明使用延長版本（病程刻畫）
-// 5) 僅顯示命中 ≥ 1；排序：命中比例 → 命中個數 → 盛行率。
+// v1.7 原文完全保留；僅在病程概述內對「嚴重片段」加上 <strong>
 
 function App() {
   const [selected, setSelected] = useState([]);
@@ -18,28 +12,25 @@ function App() {
   const delayMs = 2000;
   const [revealCount, setRevealCount] = useState(0);
 
-  const symptoms = useMemo(
-    () => [
-      { id: "headache", name: "頭痛或頭暈" },
-      { id: "chest", name: "胸悶或心悸" },
-      { id: "throat", name: "喉嚨痛" },
-      { id: "neck", name: "肩頸痠痛" },
-      { id: "breath", name: "容易喘" },
-      { id: "fatigue", name: "容易疲倦" },
-      { id: "weight", name: "體重改變" },
-      { id: "sleep", name: "睡眠品質差" },
-      { id: "gi", name: "腸胃不適" },
-    ],
-    []
-  );
+  const symptoms = useMemo(() => [
+    { id: "headache", name: "頭痛或頭暈" },
+    { id: "chest",   name: "胸悶或心悸" },
+    { id: "throat",  name: "喉嚨痛" },
+    { id: "neck",    name: "肩頸痠痛" },
+    { id: "breath",  name: "容易喘" },
+    { id: "fatigue", name: "容易疲倦" },
+    { id: "weight",  name: "體重改變" },
+    { id: "sleep",   name: "睡眠品質差" },
+    { id: "gi",      name: "腸胃不適" },
+  ], []);
 
   const symptomDict = useMemo(
-    () => Object.fromEntries(symptoms.map((s) => [s.id, s.name])),
+    () => Object.fromEntries(symptoms.map(s => [s.id, s.name])),
     [symptoms]
   );
 
-  const conditions = useMemo(
-    () => [
+  // === v1.7 文字 ===
+  const conditions = useMemo(() => [
       { id: 'celiac', name: '乳糜瀉（Celiac disease）', match: ['gi','fatigue','weight','sleep'], prevalenceP: 0.007, cureRateP: 0.7, severeAnnualRiskP: 0, shortDesc: '麩質引發的小腸免疫性損傷，影響吸收、體重與多系統症狀。', longDescHtml: `乳糜瀉是免疫系統對「麩質」產生異常反應，吃進小麥、大麥、黑麥等穀物後，免疫攻擊會破壞小腸絨毛，造成吸收不良。輕則反覆腹瀉、腹脹、體重下降與營養缺乏；重者可能出現<strong>嚴重鐵缺乏性貧血、骨質疏鬆、電解質失衡、神經病變</strong>，長期未控制會顯著影響兒童生長與成人體力，甚至增加某些腸道惡性疾病風險。典型情境是：日常飲食看似正常，但人愈來愈虛弱、容易疲倦，餐後腹脹像被氣球撐開，肚子痛到彎腰；久而久之<strong>指甲脆裂、頭髮易斷、站起來就暈</strong>。確診仰賴血清抗體與小腸切片，治療核心是嚴格「無麩質飲食」，才可逆轉黏膜受損並降低併發症。若自覺「一吃就脹、慢性腹瀉、體重無故下降」，或合併缺鐵/骨鬆，務必就醫評估。` },
       { id: 'ms', name: '多發性硬化症（Multiple sclerosis）', match: ['headache','fatigue','sleep'], prevalenceP: 0.0025, cureRateP: 0.3, severeAnnualRiskP: 0, shortDesc: '中樞神經脫髓鞘疾病，易反覆復發與逐步進展，影響多種神經功能。', longDescHtml: `多發性硬化症為中樞神經（腦與脊髓）脫髓鞘疾病，症狀可忽好忽壞：視力模糊或視神經痛、手腳無力與麻木、步態不穩、熱會誘發疲勞與症狀惡化。疾病進展時，病灶宛如在中樞神經留下一道道「斷裂的訊號路」，讓精細動作、平衡、記憶與情緒都被牽動。部分患者呈「復發—緩解型」，但若控制不佳，可能逐漸走向<strong>殘疾累積（如步行需輔具）</strong>。現代治療強調早期疾病修飾治療（DMTs）以減少復發與新病灶，並搭配復健與症狀控制。任何<strong>突發單眼視力下降、身體半側麻木、走路像踩在棉花上的不穩</strong>，都該盡快就醫；急性期常需類固醇等治療，長期則視亞型與活動度選擇藥物以延緩惡化。` },
       { id: 'ra', name: '類風濕性關節炎（Rheumatoid arthritis）', match: ['neck','fatigue','sleep'], prevalenceP: 0.0046, cureRateP: 0.3, severeAnnualRiskP: 0, shortDesc: '自體免疫多關節炎，亦可累及心、肺、眼與血管。', longDescHtml: `類風濕性關節炎是自體免疫造成的滑膜炎，清晨僵硬與對稱性小關節腫痛最典型。未控制的慢性發炎會像「火」一樣在關節內燒，時間拉長便<strong>侵蝕軟骨與骨端，導致關節變形、力量流失</strong>；發炎介質也可波及全身，引發貧血、疲倦與心血管風險上升。嚴重時，抓握開瓶、轉門把、扣鈕扣都成挑戰，甚至夜間痛醒。治療目標是「及早緩解發炎、阻止結構破壞」：以 csDMARDs、生物製劑或標靶小分子搭配密切追蹤調整爭劑量。拖延治療會讓<strong>不可逆的結構損傷</strong>悄悄累積，因此一旦出現持續多關節腫痛、晨僵超過 30 分鐘，需及時就醫由風濕專科介入。` },
@@ -61,56 +52,50 @@ function App() {
       { id: 'addison', name: '愛迪生氏病（Addison’s disease）', match: ['fatigue','weight','gi','sleep'], prevalenceP: 0.00008, cureRateP: 0.9, severeAnnualRiskP: 0.01, shortDesc: '腎上腺皮質荷爾蒙不足的內分泌危症。', longDescHtml: `為腎上腺皮質功能低下，皮質醇與醛固酮不足導致極度疲倦、體重下降、食慾差、低血壓與鹽分渴求；皮膚與黏膜可能出現色素沉著。最危險的是「腎上腺危象」：<strong>劇烈嘔吐、腹痛、低血壓、電解質紊亂與休克</strong>，需立即補液與類固醇救命。長期治療仰賴荷爾蒙替代並學會「壓力劑量」調整。若反覆暈眩、站起就黑朦、持續疲憊合併色素加深，應盡速檢查。` },
       { id: 'pa', name: '惡性貧血（Pernicious anemia）', match: ['fatigue','headache','breath'], prevalenceP: 0.001, cureRateP: 0.9, severeAnnualRiskP: 0.001, shortDesc: '自體免疫造成維生素 B12 吸收不良的巨球性貧血。', longDescHtml: `乃是<strong>自體免疫破壞胃壁</strong>的內在因子，導致維生素 B12 無法吸收，紅血球生成受阻。病人除了貧血引起的蒼白、心悸、氣促與頭暈，還可能出現<strong>舌炎、四肢麻木、步態不穩與認知變化</strong>（B12 缺乏的神經影響）。若長期未治療，可能導致<strong>不可逆的神經症狀</strong>。診斷結合 B12、抗內在因子抗體與血液學檢查；治療以 B12 注射/補充，並追蹤潛在胃部病變風險。` },
       { id: 'vm', name: '前庭性偏頭痛（Vestibular migraine）', match: ['headache','fatigue','sleep'], prevalenceP: 0.009, cureRateP: 0.5, severeAnnualRiskP: 0.0001, shortDesc: '以眩暈/不穩為主的偏頭痛譜系疾患。', longDescHtml: `這類偏頭痛以<strong>眩暈與平衡障礙</strong>為主，可在頭痛前、頭痛時或完全沒有頭痛的情況下出現。發作時環境旋轉、步伐虛浮、光聲刺激加劇不適，患者<strong>難以行走與工作，甚至嘔吐脫水</strong>。誘因包括睡眠不足、壓力、特定食物與荷爾蒙波動。診斷重點在排除其他中樞或內耳病因；治療含發作期止暈止吐與預防性藥物（依個體選擇），再配合前庭復健與誘因管理。若眩暈伴神經學異常（單側無力、語言困難）應急診排除中風。` },
-    ],
-    []
-  );
+    ]
+, []);
 
   function analyze() {
-    if (selected.length === 0) {
-      alert("請先勾選至少 1 個症狀。");
-      return;
-    }
+    if (selected.length === 0) { alert("請先勾選至少 1 個症狀。"); return; }
     setPhase("thinking");
     setOpenDetail({});
     setOpenProbs({});
 
     const list = conditions
-      .map((c) => {
-        const hits = c.match.filter((m) => selected.includes(m));
-        const ratio = c.match.length > 0 ? hits.length / c.match.length : 0;
+      .map(c => {
+        const hits = c.match.filter(m => selected.includes(m));
+        const ratio = c.match.length ? hits.length / c.match.length : 0;
         return { ...c, hits, ratio };
       })
-      .filter((c) => c.hits.length >= 1)
-      .sort((a, b) => b.ratio - a.ratio || b.hits.length - a.hits.length || (b.prevalenceP || 0) - (a.prevalenceP || 0))
+      .filter(c => c.hits.length >= 1)
+      .sort((a, b) =>
+        b.ratio - a.ratio ||
+        b.hits.length - a.hits.length ||
+        (b.prevalenceP || 0) - (a.prevalenceP || 0)
+      )
       .slice(0, 5);
 
     setResults(list);
     setRevealCount(0);
     setShowProb(false);
 
-    window.setTimeout(() => {
+    setTimeout(() => {
       setShowProb(true);
       let i = 0;
       const t = setInterval(() => {
         i += 1;
-        setRevealCount((prev) => Math.min(list.length, prev + 1));
+        setRevealCount(prev => Math.min(list.length, prev + 1));
         if (i >= list.length) clearInterval(t);
       }, 220);
-    }, 2000);
+    }, delayMs);
   }
 
   function resetAll() {
-    setSelected([]);
-    setResults([]);
-    setOpenDetail({});
-    setOpenProbs({});
-    setRevealCount(0);
-    setPhase("select");
-    setShowProb(false);
+    setSelected([]); setResults([]); setOpenDetail({}); setOpenProbs({});
+    setRevealCount(0); setPhase("select"); setShowProb(false);
   }
-
   function toggleSymptom(id) {
-    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   }
 
   return (
@@ -124,16 +109,22 @@ function App() {
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <h2 className="text-lg font-semibold mb-3">請勾選最近出現過的症狀</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {symptoms.map((s) => (
-                <label key={s.id} className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer select-none transition ${selected.includes(s.id) ? "bg-gray-900 text-white border-gray-900" : "bg-gray-50 border-gray-200 hover:bg-gray-100"}`}>
-                  <input type="checkbox" checked={selected.includes(s.id)} onChange={() => toggleSymptom(s.id)} className="accent-gray-900 w-4 h-4" />
+              {symptoms.map(s => (
+                <label key={s.id}
+                  className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer select-none transition ${
+                    selected.includes(s.id) ? "bg-gray-900 text-white border-gray-900"
+                    : "bg-gray-50 border-gray-200 hover:bg-gray-100"}`}>
+                  <input type="checkbox" checked={selected.includes(s.id)}
+                         onChange={() => toggleSymptom(s.id)} className="accent-gray-900 w-4 h-4" />
                   <span className="text-sm font-medium">{s.name}</span>
                 </label>
               ))}
             </div>
             <div className="mt-4 flex items-center justify-between">
-              <button onClick={resetAll} className="px-3 py-1.5 rounded-xl border border-gray-300 text-sm bg-white hover:bg-gray-50">重設</button>
-              <button onClick={analyze} className="px-4 py-2 rounded-xl bg-gray-900 text-white text-sm shadow hover:opacity-90">開始診斷</button>
+              <button onClick={resetAll}
+                      className="px-3 py-1.5 rounded-xl border border-gray-300 text-sm bg-white hover:bg-gray-50">重設</button>
+              <button onClick={analyze}
+                      className="px-4 py-2 rounded-xl bg-gray-900 text-white text-sm shadow hover:opacity-90">開始診斷</button>
             </div>
           </section>
         )}
@@ -142,38 +133,55 @@ function App() {
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mt-4">
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-lg font-semibold">你很可能確診了</h2>
-              {phase === "thinking" && !showProb && (<span className="text-xs text-gray-500">正在估算機率…</span>)}
+              {phase === "thinking" && !showProb && <span className="text-xs text-gray-500">正在估算機率…</span>}
             </div>
 
-            {phase === "thinking" && !showProb && <Progress ms={2000} />}
+            {phase === "thinking" && !showProb && <Progress ms={delayMs} />}
 
             <ul className="mt-3 space-y-2">
               {results.map((r, i) => (
-                <li key={r.id} className="p-3 rounded-xl border border-gray-200 bg-gray-50" style={{ opacity: i < revealCount ? 1 : 0, transition: "opacity 500ms ease" }}>
+                <li key={r.id}
+                    className="p-3 rounded-xl border border-gray-200 bg-gray-50"
+                    style={{ opacity: i < revealCount ? 1 : 0, transition: "opacity 500ms ease" }}>
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="font-medium">{i + 1}. {r.name}</div>
-                    <div className="text-xs text-gray-500">命中症狀：{r.hits.length} / {r.match.length}（{r.hits.map((id) => symptomDict[id]).join("、")}）</div>
+                    <div className="text-xs text-gray-500">
+                      命中症狀：{r.hits.length} / {r.match.length}（{r.hits.map(id => symptomDict[id]).join("、")}）
+                    </div>
                   </div>
                   <p className="mt-1 text-sm text-gray-700 leading-relaxed">{r.shortDesc}</p>
 
                   {showProb ? (
                     <div className="mt-2">
-                      <button className="w-full text-left text-sm flex items-center justify-between p-2 rounded-lg bg白 border border-gray-200 hover:bg-gray-100" onClick={() => setOpenDetail((o) => ({ ...o, [r.id]: !o[r.id] }))} aria-expanded={!!openDetail[r.id]}>
+                      <button
+                        className="w-full text-left text-sm flex items-center justify-between p-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-100"
+                        onClick={() => setOpenDetail(o => ({ ...o, [r.id]: !o[r.id] }))}
+                        aria-expanded={!!openDetail[r.id]}
+                      >
                         <span className="font-medium">病程概述</span>
                         <span className={`transition-transform ${openDetail[r.id] ? "rotate-180" : ""}`}>▾</span>
                       </button>
 
                       {openDetail[r.id] && (
                         <div className="mt-2">
-                          <div className="p-3 rounded-lg bg-white border border-gray-200 text-sm text-gray-700 leading-relaxed">{r.longDesc}</div>
+                          <div
+                            className="p-3 rounded-lg bg-white border border-gray-200 text-sm text-gray-700 leading-relaxed whitespace-pre-line"
+                            dangerouslySetInnerHTML={{ __html: r.longDescHtml }}
+                          />
                           <div className="mt-2">
-                            <button className="w-full text-left text-sm flex items-center justify-between p-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-100" onClick={() => setOpenProbs((o) => ({ ...o, [r.id]: !o[r.id] }))} aria-expanded={!!openProbs[r.id]}>
+                            <button
+                              className="w-full text-left text-sm flex items-center justify-between p-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-100"
+                              onClick={() => setOpenProbs(o => ({ ...o, [r.id]: !o[r.id] }))}
+                              aria-expanded={!!openProbs[r.id]}
+                            >
                               <span className="font-medium">真實機率</span>
                               <span className={`transition-transform ${openProbs[r.id] ? "rotate-180" : ""}`}>▾</span>
                             </button>
                             {openProbs[r.id] && (
                               <div className="mt-2">
-                                <div className="text-xs text-gray-600 mb-2">但其實，你罹患此疾病或導致重症的機率非常低</div>
+                                <div className="text-xs text-gray-600 mb-2">
+                                  但其實，你罹患此疾病或導致重症的機率非常低
+                                </div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                                   <ProbBox label="成年人盛行率" value={r.prevalenceP} />
                                   <ProbBox label="痊癒/良好控制率" value={r.cureRateP} />
@@ -193,7 +201,12 @@ function App() {
             </ul>
 
             <div className="mt-4 flex items-center justify-between">
-              <button onClick={() => { setPhase("select"); setOpenDetail({}); setOpenProbs({}); }} className="px-3 py-1.5 rounded-xl border border-gray-300 text-sm bg-white hover:bg-gray-50">重新診斷</button>
+              <button
+                onClick={() => { setPhase("select"); setOpenDetail({}); setOpenProbs({}); }}
+                className="px-3 py-1.5 rounded-xl border border-gray-300 text-sm bg-white hover:bg-gray-50"
+              >
+                重新診斷
+              </button>
             </div>
           </section>
         )}
@@ -215,7 +228,6 @@ function ProbBox({ label, value }) {
   );
 }
 
-// 小機率以第一位有效數字；整數百分比移除 .0
 function toPretty(v) {
   if (v == null) return { pctStr: "—", oneInStr: "" };
   if (v === 0) return { pctStr: "≈0", oneInStr: "" };
@@ -224,13 +236,8 @@ function toPretty(v) {
   const pct = v * 100;
   let decimals = 1;
   if (pct > 0 && pct < 1) {
-    let t = pct;
-    decimals = 0;
-    while (t < 1) {
-      t *= 10;
-      decimals += 1;
-      if (decimals > 6) break;
-    }
+    let t = pct; decimals = 0;
+    while (t < 1) { t *= 10; decimals += 1; if (decimals > 6) break; }
   }
   let pctFixed = pct.toFixed(Math.max(1, decimals));
   if (/\.0$/.test(pctFixed)) pctFixed = pctFixed.slice(0, -2);
