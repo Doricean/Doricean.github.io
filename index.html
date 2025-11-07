@@ -2,17 +2,14 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    />
-    <title>網路自診模擬 v1.5</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>網路自診模擬 v1.7</title>
     <!-- React 18 UMD -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <!-- Babel Standalone：瀏覽器端轉譯 JSX（開課用最方便） -->
+    <!-- Babel Standalone for JSX in browser -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Tailwind CDN -->
+    <!-- Tailwind Play CDN (dev/prototype) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       html, body, #root { height: 100%; }
@@ -21,8 +18,6 @@
   </head>
   <body>
     <div id="root"></div>
-
-    <!-- 直接載入你的 index.jsx -->
     <script type="text/babel" data-type="module" src="index.jsx"></script>
   </body>
 </html>
