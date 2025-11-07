@@ -109,7 +109,7 @@ function App() {
       },
       {
         id: 'pots',
-        name: 'Postural orthostatic tachycardia syndrome（POTS）',
+        name: '姿勢性直立心搏過速症候群（Postural orthostatic tachycardia syndrome）',
         match: ['headache','chest','breath','fatigue','sleep'],
         prevalenceP: 0.006, cureRateP: 0.5, severeAnnualRiskP: 0,
         shortDesc: '站立時心跳顯著上升的自主神經失調，影響日常功能。',
